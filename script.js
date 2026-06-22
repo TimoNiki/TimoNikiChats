@@ -1,4 +1,4 @@
-// Импортируем нужные функции из официального облака Google (Firebase)
+// Правильные и точные ссылки для работы прямо в браузере без сборщиков кода
 import { initializeApp } from "https://gstatic.com";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://gstatic.com";
 import { getFirestore, doc, getDoc, setDoc } from "https://gstatic.com";
