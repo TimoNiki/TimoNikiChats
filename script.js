@@ -1,7 +1,7 @@
 // Правильные и точные ссылки для работы прямо в браузере без сборщиков кода
-import { initializeApp } from "https://gstatic.com";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://gstatic.com";
-import { getFirestore, doc, getDoc, setDoc } from "https://gstatic.com";
+import { initializeApp } from "https://www.gstatic.com";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com";
 
 // КОПИРУЙТЕ ЭТИ ДАННЫЕ ИЗ КОНСОЛИ FIREBASE (Project Settings -> Web App)
 const firebaseConfig = {
