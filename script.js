@@ -1,7 +1,7 @@
 // Подключаем Firebase через надежный сервис jsDelivr, где нет проблем с CORS
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+import { collection, addDoc, onSnapshot query, orderBy, getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 // КОПИРУЙТЕ ЭТИ ДАННЫЕ ИЗ КОНСОЛИ FIREBASE (Project Settings -> Web App)
 const firebaseConfig = {
@@ -79,28 +79,34 @@ function showChat() {
     document.getElementById('auth-block').style.display = 'none';
     document.getElementById('chat-block').style.display = 'flex';
 }
-// --- ДОБАВЛЯЕМ НЕДОСТАЮЩИЙ РАЗДЕЛ ПОИСКА ЛЮДЕЙ ---
+// Глобальные переменные, чтобы код помнил, с кем мы сейчас общаемся
+let currentChatPartner = ""; 
+let unsubscribeMessages = null; // Функция для отключения от старого чата
+
+// --- ОБНОВЛЕННЫЙ ПОИСК ЛЮДЕЙ ---
 document.getElementById('search-btn').addEventListener('click', async () => {
-    // 1. Берем ник, который вы ввели в поле поиска, убираем пробелы и делаем буквы маленькими
     const searchName = document.getElementById('search-user').value.trim().toLowerCase();
     const resultsDiv = document.getElementById('search-results');
     
-    // Пишем временный статус, чтобы вы видели, что кнопка среагировала
     resultsDiv.innerHTML = 'Идет поиск...';
 
     if (!searchName) {
-        resultsDiv.innerHTML = 'Пожалуйста, введите ник!';
+        resultsDiv.innerHTML = 'Введите ник!';
+        return;
+    }
+
+    // Проверяем, чтобы пользователь не искал сам себя
+    const myNick = auth.currentUser.email.split('@')[0];
+    if (searchName === myNick) {
+        resultsDiv.innerHTML = 'Вы не можете писать самому себе!';
         return;
     }
 
     try {
-        // 2. Делаем запрос в Firebase Firestore в папку "users" к документу с этим ником
         const userDocRef = doc(db, "users", searchName);
         const docSnap = await getDoc(userDocRef);
 
-        // 3. Проверяем, существует ли такой пользователь в базе данных
         if (docSnap.exists()) {
-            // Если нашли человека в вашей папке users
             resultsDiv.innerHTML = `
                 <div class="user-item">
                     <span>Найдено: <b>${searchName}</b></span>
@@ -108,20 +114,95 @@ document.getElementById('search-btn').addEventListener('click', async () => {
                 </div>
             `;
             
-            // Логика для кнопки "Написать" (пока просто уведомление)
+            // Нажатие на кнопку «Написать» теперь запускает чат!
             document.getElementById('start-chat-btn').addEventListener('click', () => {
-                alert(`Открываем личный чат с пользователем: ${searchName}`);
+                openChatWith(searchName);
             });
 
         } else {
-            // Если в вашей коллекции users на Firebase нет такого имени
             resultsDiv.innerHTML = 'Пользователь не найден';
         }
 
     } catch (error) {
-        // Если база данных заблокирует запрос, вы увидите ошибку прямо на экране
         console.error(error);
-        resultsDiv.innerHTML = 'Ошибка поиска: ' + error.message;
+        resultsDiv.innerHTML = 'Ошибка: ' + error.message;
     }
 });
+
+// --- ФУНКЦИЯ ОТКРЫТИЯ ЧАТА С ПОЛЬЗОВАТЕЛЕМ ---
+function openChatWith(partnerNick) {
+    currentChatPartner = partnerNick;
+    
+    // Меняем заголовок чата, чтобы видеть, кому пишем
+    document.getElementById('messages').innerHTML = `<div style="text-align:center; color:gray;">Чат с пользователем <b>${partnerNick}</b> открыт</div>`;
+    
+    // Слушаем сообщения для этого чата
+    listenForMessages();
+}
+
+// --- ОТПРАВКА СООБЩЕНИЯ В FIREBASE ---
+document.getElementById('send-btn').addEventListener('click', async () => {
+    const msgText = document.getElementById('msg-input').value.trim();
+    if (!msgText || !currentChatPartner) return; // Если текст пустой или собеседник не выбран
+
+    // Узнаем наш собственный ник из почты аккаунта
+    const myNick = auth.currentUser.email.split('@')[0];
+
+    // Создаем уникальный ID комнаты (чтобы у Никиты и Тимура чат был в одной папке)
+    // Сортируем ники по алфавиту: "nikita_timur" всегда будет одинаковым для обоих
+    const chatId = [myNick, currentChatPartner].sort().join('_');
+
+    try {
+        // Сохраняем сообщение в Firebase в коллекцию "chats -> ID_комнаты -> messages"
+        await addDoc(collection(db, "chats", chatId, "messages"), {
+            sender: myNick,
+            text: msgText,
+            createdAt: new Date()
+        });
+
+        // Очищаем поле ввода
+        document.getElementById('msg-input').value = '';
+    } catch (error) {
+        alert('Не удалось отправить сообщение: ' + error.message);
+    }
+});
+
+// --- ПОЛУЧЕНИЕ СООБЩЕНИЙ В РЕАЛЬНОМ ВРЕМЕНИ ---
+function listenForMessages() {
+    // Если мы уже были подключены к какому-то чату — отключаемся от него
+    if (unsubscribeMessages) unsubscribeMessages();
+
+    const myNick = auth.currentUser.email.split('@')[0];
+    const chatId = [myNick, currentChatPartner].sort().join('_');
+
+    // Делаем запрос в Firebase и сортируем сообщения по времени отправки
+    const messagesQuery = query(
+        collection(db, "chats", chatId, "messages"),
+        orderBy("createdAt", "asc")
+    );
+
+    // onSnapshot автоматически обновляет экран, как только в Firebase падает новое сообщение
+    unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
+        const messagesBox = document.getElementById('messages');
+        messagesBox.innerHTML = ''; // Очищаем экран перед выводом списка
+
+        snapshot.forEach((messageDoc) => {
+            const msgData = messageDoc.data();
+            
+            // Проверяем, кто отправил сообщение — мы или собеседник
+            const isMyMsg = msgData.sender === myNick;
+
+            // Создаем визуальный блок сообщения
+            const msgHtml = `
+                <div class="message ${isMyMsg ? 'my-msg' : ''}">
+                    <b>${msgData.sender}:</b> ${msgData.text}
+                </div>
+            `;
+            messagesBox.insertAdjacentHTML('beforeend', msgHtml);
+        });
+
+        // Прокручиваем чат в самый вниз к последнему сообщению
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+    });
+}
 
