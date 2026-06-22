@@ -79,3 +79,49 @@ function showChat() {
     document.getElementById('auth-block').style.display = 'none';
     document.getElementById('chat-block').style.display = 'flex';
 }
+// --- ДОБАВЛЯЕМ НЕДОСТАЮЩИЙ РАЗДЕЛ ПОИСКА ЛЮДЕЙ ---
+document.getElementById('search-btn').addEventListener('click', async () => {
+    // 1. Берем ник, который вы ввели в поле поиска, убираем пробелы и делаем буквы маленькими
+    const searchName = document.getElementById('search-user').value.trim().toLowerCase();
+    const resultsDiv = document.getElementById('search-results');
+    
+    // Пишем временный статус, чтобы вы видели, что кнопка среагировала
+    resultsDiv.innerHTML = 'Идет поиск...';
+
+    if (!searchName) {
+        resultsDiv.innerHTML = 'Пожалуйста, введите ник!';
+        return;
+    }
+
+    try {
+        // 2. Делаем запрос в Firebase Firestore в папку "users" к документу с этим ником
+        const userDocRef = doc(db, "users", searchName);
+        const docSnap = await getDoc(userDocRef);
+
+        // 3. Проверяем, существует ли такой пользователь в базе данных
+        if (docSnap.exists()) {
+            // Если нашли человека в вашей папке users
+            resultsDiv.innerHTML = `
+                <div class="user-item">
+                    <span>Найдено: <b>${searchName}</b></span>
+                    <button id="start-chat-btn">Написать</button>
+                </div>
+            `;
+            
+            // Логика для кнопки "Написать" (пока просто уведомление)
+            document.getElementById('start-chat-btn').addEventListener('click', () => {
+                alert(`Открываем личный чат с пользователем: ${searchName}`);
+            });
+
+        } else {
+            // Если в вашей коллекции users на Firebase нет такого имени
+            resultsDiv.innerHTML = 'Пользователь не найден';
+        }
+
+    } catch (error) {
+        // Если база данных заблокирует запрос, вы увидите ошибку прямо на экране
+        console.error(error);
+        resultsDiv.innerHTML = 'Ошибка поиска: ' + error.message;
+    }
+});
+
