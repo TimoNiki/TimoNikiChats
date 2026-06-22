@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой Супер Чат</title>
+    <style>
+        /* Базовые стили для красоты сайта */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Окно авторизации */
+        .auth-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 300px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .reg-btn {
+            background-color: #28a745;
+        }
+
+        .reg-btn:hover {
+            background-color: #218838;
+        }
+
+        /* Главный экран чата */
+        .chat-container {
+            display: none; /* Скрыт, пока не войдем */
+            width: 800px;
+            height: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* Боковое меню (Поиск) */
+        .sidebar {
+            width: 250px;
+            background: #343a40;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ddd;
+        }
+
+        .sidebar h3 {
+            margin-top: 0;
+        }
+
+        #search-results {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .user-item {
+            background: #495057;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-item button {
+            width: auto;
+            padding: 5px 10px;
+            font-size: 12px;
+            margin: 0;
+        }
+
+        /* Зона сообщений */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+        }
+
+        .messages-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 70%;
+            align-self: flex-start;
+        }
+
+        .message.my-msg {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .input-box {
+            padding: 15px;
+            background: white;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        .input-box input {
+            margin: 0;
+            flex: 1;
+        }
+
+        .input-box button {
+            width: 100px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. ФОРМА ВХОДА И РЕГИСТРАЦИИ -->
+    <div class="auth-container" id="auth-block">
+        <h2>Вход в Чат</h2>
+        <input type="text" id="username" placeholder="Введите ваш никнейм">
+        <input type="password" id="password" placeholder="Пароль (от 6 символов)">
+        <button id="login-btn">Войти</button>
+        <button id="register-btn" class="reg-btn">Зарегистрироваться</button>
+    </div>
+
+    <!-- 2. ИНТЕРФЕЙС САМОГО ЧАТА -->
+    <div class="chat-container" id="chat-block">
+        <!-- Левая панель: Поиск людей -->
+        <div class="sidebar">
+            <h3>Поиск людей</h3>
+            <input type="text" id="search-user" placeholder="Поиск по нику...">
+            <button id="search-btn">Найти</button>
+            <div id="search-results"></div>
+        </div>
+
+        <!-- Правая панель: Окно переписки -->
+        <div class="chat-area">
+            <div class="messages-box" id="messages">
+                <div class="message">Тут будут появляться сообщения...</div>
+            </div>
+            <div class="input-box">
+                <input type="text" id="msg-input" placeholder="Напишите сообщение...">
+                <button id="send-btn">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключаем логику. Важно: type="module" позволяет использовать import внутри script.js -->
+    <script type="module" src="script.js"></script>
+
+</body>
+</html>
