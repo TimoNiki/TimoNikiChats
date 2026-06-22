@@ -1,7 +1,7 @@
-// Правильные и точные ссылки для работы прямо в браузере без сборщиков кода
-import { initializeApp } from "https://www.gstatic.com";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com";
+// Подключаем Firebase через надежный сервис jsDelivr, где нет проблем с CORS
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 // КОПИРУЙТЕ ЭТИ ДАННЫЕ ИЗ КОНСОЛИ FIREBASE (Project Settings -> Web App)
 const firebaseConfig = {
